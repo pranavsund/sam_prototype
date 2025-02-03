@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Segmentation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        h3 {
+            color: black;
+            display: none;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        #imageContainer {
+            display: flex;
+            justify-content: center;
+            gap: 20px; /* Adds spacing between images */
+            margin-top: 20px;
+        }
+        .image-wrapper {
+            text-align: center;
+            flex: 1; /* Allow both images to grow/shrink equally */
+        }
+        #originalImage {
+            margin: 0 auto;
+            max-width: 100%;
+            height: auto;
+            display: none; /* Initially hidden */
+        }
+        #outputImage {
+            margin: 0 auto;
+            max-width: 100%;
+            height: auto;
+            display: none; /* Initially hidden */
+        }
+        #loading {
+            margin-top: 20px;
+            font-size: 18px;
+            color: #555;
+            display: none; /* Initially hidden */
+        }
+        #downloadButton {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            display: none; /* Initially hidden */
+        }
+        #downloadButton:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Image Segmentation Tool</h1>
+    <p>Upload an image to segment and view the results.</p>
+    
+    <!-- Form for image upload -->
+    <form id="uploadForm">
+        <input type="file" id="imageInput" accept="image/*" required>
+        <button type="submit">Upload and Segment</button>
+    </form>
+    
+    <!-- Loading message -->
+    <div id="loading">Processing image, please wait...</div>
+
+    <!-- Images container -->
+    <div id="imageContainer" style="display: none;">
+        <div class="image-wrapper">
+            <h3 id="origTitle">Original Image</h3>
+            <img id="originalImage" alt="Original Image">
+        </div>
+        <div class="image-wrapper">
+            <h3 id="outputTitle">Segmented Image</h3>
+            <img id="outputImage" alt="Segmented Image">
+            <a href="#" class="btn btn-primary" id="downloadButton">Download Segmented Image</a>
+        </div>
+    </div>
+
+    <!-- JavaScript for image processing -->
+    <script>
+        const form = document.getElementById('uploadForm');
+        const fileInput = document.getElementById('imageInput');
+        const originalImage = document.getElementById('originalImage');
+        const origTitle = document.getElementById('origTitle');
+        const outputTitle = document.getElementById('outputTitle');
+        const outputImage = document.getElementById('outputImage');
+        const loadingIndicator = document.getElementById('loading');
+        const imageContainer = document.getElementById('imageContainer');
+        const downloadButton = document.getElementById('downloadButton');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!fileInput.files[0]) {
+                alert('Please select an image file!');
+                return;
+            }
+
+            // Show loading indicator and hide previous results
+            loadingIndicator.style.display = 'block';
+            imageContainer.style.display = 'none';
+            downloadButton.style.display = 'none';
+
+            // Display the original image at its original size
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                originalImage.src = event.target.result;
+                originalImage.onload = () => {
+                    originalImage.style.width = `${originalImage.naturalWidth}px`;
+                    originalImage.style.height = `${originalImage.naturalHeight}px`;
+                };
+                imageContainer.style.display = 'flex';
+                origTitle.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            try {
+                const response = await fetch('/process_image', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to process the image');
+                }
+
+                const blob = await response.blob();
+                const imageURL = URL.createObjectURL(blob);
+
+                // Update the segmented image and display it at its original size
+                outputImage.src = imageURL;
+                outputImage.onload = () => {
+                    outputImage.style.width = `${outputImage.naturalWidth}px`;
+                    outputImage.style.height = `${outputImage.naturalHeight}px`;
+                };
+                outputImage.style.display = 'block';
+                outputTitle.style.display = 'block';
+
+                // Enable the download button with the segmented image
+                downloadButton.style.display = 'inline-block';
+                downloadButton.href = imageURL; // Set the download link
+                downloadButton.download = 'segmented_image.png'; // Set the file name for download
+            } catch (error) {
+                alert('An error occurred: ' + error.message);
+            } finally {
+                // Hide loading indicator
+                loadingIndicator.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
