@@ -105,7 +105,20 @@
             e.preventDefault();
 
             if (!fileInput.files[0]) {
-                alert('Please select an image file!');
+                alert('Please select a file!');
+                return;
+            }
+
+            // Show loading indicator and hide previous results
+            loadingIndicator.style.display = 'block';
+            imageContainer.style.display = 'none';
+            downloadButton.style.display = 'none';
+
+            // Check if the file is a PNG or JPEG
+            const file = fileInput.files[0];
+            const validTypes = ["image/png", "image/jpeg"];
+            if (!validTypes.includes(file.type)) {
+                alert("Only JPEG and PNG files are allowed.");
                 return;
             }
 
@@ -115,7 +128,6 @@
             downloadButton.style.display = 'none';
 
             // Display the original image at its original size
-            const file = fileInput.files[0];
             const reader = new FileReader();
             reader.onload = (event) => {
                 originalImage.src = event.target.result;
@@ -128,13 +140,13 @@
             };
             reader.readAsDataURL(file);
 
-            const formData = new FormData();
-            formData.append('image', file);
-
             try {
-                const response = await fetch('/process_image', {
+                const response = await fetch("http://sam-alb-1481077068.us-east-2.elb.amazonaws.com", {
                     method: 'POST',
-                    body: formData,
+                    headers: {
+                        "Content-Type": file.type, // Set the content type to the image type
+                    },
+                    body: file,
                 });
 
                 if (!response.ok) {
