@@ -141,7 +141,7 @@
             reader.readAsDataURL(file);
 
             try {
-                const response = await fetch("http://sam-alb-1481077068.us-east-2.elb.amazonaws.com", {
+                const response = await fetch("https://sam.pranavsund.me", {
                     method: 'POST',
                     headers: {
                         "Content-Type": file.type, // Set the content type to the image type
