@@ -129,16 +129,13 @@
 
             // Display the original image at its original size
             const reader = new FileReader();
+            reader.readAsDataURL(file);
             reader.onload = (event) => {
                 originalImage.src = event.target.result;
-                originalImage.onload = () => {
-                    originalImage.style.width = `${originalImage.naturalWidth}px`;
-                    originalImage.style.height = `${originalImage.naturalHeight}px`;
-                };
+                originalImage.style.display = "block";
                 imageContainer.style.display = 'flex';
                 origTitle.style.display = 'block';
             };
-            reader.readAsDataURL(file);
 
             try {
                 const response = await fetch("https://sam.pranavsund.me", {
@@ -158,10 +155,7 @@
 
                 // Update the segmented image and display it at its original size
                 outputImage.src = imageURL;
-                outputImage.onload = () => {
-                    outputImage.style.width = `${outputImage.naturalWidth}px`;
-                    outputImage.style.height = `${outputImage.naturalHeight}px`;
-                };
+                outputImage.style.display = "block";
                 outputImage.style.display = 'block';
                 outputTitle.style.display = 'block';
 
